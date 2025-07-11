@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-dark text-white;
+  }
+}
+
+@layer components {
+  .gradient-bg {
+    @apply bg-gradient-to-br from-primary via-secondary to-accent animate-gradient;
+  }
+  
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl;
+  }
+  
+  .neon-glow {
+    box-shadow: 0 0 20px rgba(170, 51, 255, 0.5),
+                0 0 40px rgba(170, 51, 255, 0.3),
+                0 0 60px rgba(170, 51, 255, 0.1);
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-full 
+           hover:shadow-lg hover:scale-105 transform transition-all duration-300
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  
+  .input-modern {
+    @apply w-full px-6 py-4 bg-dark-lighter border-2 border-white/10 rounded-2xl
+           text-white placeholder-gray-400 transition-all duration-300
+           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
