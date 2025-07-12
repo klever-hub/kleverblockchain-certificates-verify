@@ -46,19 +46,19 @@ export default function VerifyPage() {
         </div>
         
         <div className="glass-card p-6 sm:p-8 mb-8 animate-fade-in animation-delay-200">
-          <h2 className="text-2xl font-bold mb-6 text-white flex items-center">
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center">
+            <span className="text-gradient">
               NFT Details
             </span>
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-dark-lighter rounded-xl p-4">
-              <p className="text-sm text-gray-400 mb-1">Collection Ticker</p>
-              <p className="text-xl font-mono text-white">{ticker || '—'}</p>
+            <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Collection Ticker</p>
+              <p className="text-xl font-mono text-gray-900 dark:text-white">{ticker || '—'}</p>
             </div>
-            <div className="bg-dark-lighter rounded-xl p-4">
-              <p className="text-sm text-gray-400 mb-1">NFT Nonce</p>
-              <p className="text-xl font-mono text-white">{nonce || '—'}</p>
+            <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">NFT Nonce</p>
+              <p className="text-xl font-mono text-gray-900 dark:text-white">{nonce || '—'}</p>
             </div>
           </div>
         </div>
@@ -109,24 +109,24 @@ export default function VerifyPage() {
         {metadata && (
           <div className="space-y-8 animate-fade-in">
             <div className="glass-card p-6 sm:p-8 neon-glow">
-              <h3 className="text-2xl font-bold mb-6 text-white">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
                 Certificate Metadata
               </h3>
               <div className="space-y-4">
-                <div className="bg-dark-lighter rounded-xl p-4">
+                <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="text-sm text-gray-400 mb-2">Document Hash</p>
-                      <p className="font-mono text-sm text-white break-all">{metadata.hash}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Document Hash</p>
+                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">{metadata.hash}</p>
                     </div>
                     <CopyButton text={metadata.hash} label="Copy" />
                   </div>
                 </div>
-                <div className="bg-dark-lighter rounded-xl p-4">
+                <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="text-sm text-gray-400 mb-2">Merkle Root Hash</p>
-                      <p className="font-mono text-sm text-white break-all">{metadata.rootHash}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Merkle Root Hash</p>
+                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">{metadata.rootHash}</p>
                     </div>
                     <CopyButton text={metadata.rootHash} label="Copy" />
                   </div>

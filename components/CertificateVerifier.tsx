@@ -297,13 +297,13 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
             {pdfVerificationResult.isValid === true ? '✓' : <span className="text-sm">PDF</span>}
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-white">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
               Upload Certificate PDF
             </h3>
-            <p className="text-sm text-gray-400 mt-1">Optional - Only needed for document verification</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Optional - Only needed for document verification</p>
           </div>
         </div>
-        <p className="text-gray-300 mb-6">
+        <p className="text-gray-700 dark:text-gray-300 mb-6">
           Have the digital PDF? Upload it to verify the document hash. You can still verify individual fields without uploading.
         </p>
         <div 
@@ -331,7 +331,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
               <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              <p className="text-lg text-gray-300 mb-2">
+              <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
                 {file ? file.name : 'Drop your PDF here or click to browse'}
               </p>
               <p className="text-sm text-gray-500">
@@ -369,7 +369,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
               }`}>
                 PDF {pdfVerificationResult.isValid ? 'Verified' : 'Verification Failed'}
               </h4>
-              <p className="text-gray-300">
+              <p className="text-gray-700 dark:text-gray-300">
                 {pdfVerificationResult.message}
               </p>
             </div>
@@ -388,24 +388,24 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
             }`}>
               {verifiedFieldsCount === totalFieldsCount && totalFieldsCount > 0 ? '✓' : <span className="text-sm">Fields</span>}
             </div>
-            <h3 className="text-2xl font-bold text-white">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
               Verify Certificate Details
             </h3>
           </div>
-          <p className="text-gray-300 mb-6">
+          <p className="text-gray-700 dark:text-gray-300 mb-6">
             Enter the certificate details exactly as they appear on your document (printed or digital) to verify individual fields.
           </p>
           
           {/* Quick Actions */}
-          <div className="mb-6 p-4 bg-primary/10 rounded-xl">
-            <p className="text-sm text-gray-300 mb-2">
-              <strong>Tip:</strong> You can find these details on your PDF certificate
+          <div className="mb-6 p-4 bg-primary-50 dark:bg-primary/10 rounded-xl border border-primary-200 dark:border-transparent">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              <strong className="text-gray-900 dark:text-white">Tip:</strong> You can find these details on your PDF certificate
             </p>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
               Fields marked with ✓ have been successfully verified
             </div>
             {autoFilledFields.length > 0 && (
-              <div className="mt-2 text-xs text-accent animate-pulse">
+              <div className="mt-2 text-xs text-accent-600 dark:text-accent animate-pulse">
                 ✨ Auto-filled {autoFilledFields.length} field{autoFilledFields.length > 1 ? 's' : ''} from PDF metadata
               </div>
             )}
@@ -415,27 +415,27 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
             {availableFields.map((field) => (
               <div key={field} className={`p-4 rounded-xl transition-all duration-300 ${
                 fieldVerifications[field].isValid === true 
-                  ? 'bg-accent/10 border border-accent/30' 
+                  ? 'bg-accent-50 dark:bg-accent/10 border border-accent-200 dark:border-accent/30' 
                   : fieldVerifications[field].isValid === false
-                  ? 'bg-red-500/10 border border-red-500/30'
-                  : 'bg-dark-lighter border border-transparent hover:border-white/10'
+                  ? 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30'
+                  : 'bg-gray-50 dark:bg-dark-lighter border border-gray-200 dark:border-transparent hover:border-gray-300 dark:hover:border-white/10'
               }`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {formatFieldName(field)}
                       {fieldVerifications[field].isValid === true && (
-                        <span className="ml-2 text-accent">✓</span>
+                        <span className="ml-2 text-accent-600 dark:text-accent">✓</span>
                       )}
                       {autoFilledFields.includes(field) && (
-                        <span className="ml-2 text-xs text-primary animate-pulse">(auto-filled)</span>
+                        <span className="ml-2 text-xs text-primary-600 dark:text-primary animate-pulse">(auto-filled)</span>
                       )}
                     </label>
                     <input
                       type="text"
                       value={fieldVerifications[field].value}
                       onChange={(e) => handleFieldChange(field, e.target.value)}
-                      className="w-full px-4 py-2 bg-dark border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-dark border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary/50 transition-all disabled:bg-gray-100 dark:disabled:bg-dark/50 disabled:cursor-not-allowed"
                       placeholder={`Enter ${formatFieldName(field).toLowerCase()}`}
                       disabled={fieldVerifications[field].isValid === true}
                     />
@@ -445,8 +445,8 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
                     disabled={!fieldVerifications[field].value || fieldVerifications[field].isVerifying || fieldVerifications[field].isValid === true || isVerifyingAll}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                       fieldVerifications[field].isValid === true
-                        ? 'bg-accent/20 text-accent cursor-default'
-                        : 'bg-primary/20 text-primary hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed'
+                        ? 'bg-accent-100 dark:bg-accent/20 text-accent-700 dark:text-accent cursor-default'
+                        : 'bg-primary-100 dark:bg-primary/20 text-primary-700 dark:text-primary hover:bg-primary-200 dark:hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed'
                     }`}
                   >
                     {fieldVerifications[field].isVerifying ? (
@@ -462,7 +462,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
                   </button>
                 </div>
                 {fieldVerifications[field].isValid === false && (
-                  <p className="mt-2 text-sm text-red-400">
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                     This value doesn't match the certificate record. Please check and try again.
                   </p>
                 )}
@@ -472,16 +472,16 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
 
           {/* Batch Actions */}
           {verifiedFieldsCount < totalFieldsCount && (
-            <div className="mt-6 pt-6 border-t border-white/10">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
               <div className="flex flex-col items-center gap-4">
-                <p className="text-sm text-gray-400 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                   {totalFieldsCount - verifiedFieldsCount} field{totalFieldsCount - verifiedFieldsCount !== 1 ? 's' : ''} remaining
                 </p>
                 {availableFields.some(field => fieldVerifications[field].value && fieldVerifications[field].isValid !== true) && (
                   <button
                     onClick={verifyAllFields}
                     disabled={isVerifyingAll}
-                    className="px-6 py-2 bg-primary/20 text-primary hover:bg-primary/30 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-primary-100 dark:bg-primary/20 text-primary-700 dark:text-primary hover:bg-primary-200 dark:hover:bg-primary/30 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isVerifyingAll ? (
                       <>
