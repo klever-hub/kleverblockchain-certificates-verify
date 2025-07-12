@@ -5,9 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run copy-pdf-worker && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "copy-pdf-worker": "mkdir -p public/pdf.worker && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker/pdf.worker.min.js",
+    "postinstall": "npm run copy-pdf-worker"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,7 @@
     "crypto-js": "^4.2.0",
     "merkletreejs": "^0.5.2",
     "next": "^15.3.5",
+    "pdfjs-dist": "^5.3.93",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "typescript": "^5.8.3"

@@ -3,7 +3,8 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { fetchNFTMetadata, NFTMetadata } from '@/lib/klever-api'
-import CertificateVerifier from '@/components/CertificateVerifier'
+import CertificateVerifierWrapper from '@/components/CertificateVerifierWrapper'
+import CopyButton from '@/components/CopyButton'
 
 export default function VerifyPage() {
   const params = useParams()
@@ -77,9 +78,29 @@ export default function VerifyPage() {
               <svg className="w-6 h-6 text-red-400 mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <div>
-                <h3 className="text-lg font-semibold text-red-400 mb-1">Error Loading Certificate</h3>
-                <p className="text-gray-300">{error}</p>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-red-400 mb-2">Unable to Load Certificate</h3>
+                <p className="text-gray-300 mb-4">
+                  {error.includes('404') || error.includes('not found') 
+                    ? 'This certificate ID was not found. Please check the ID and try again.'
+                    : error.includes('network') || error.includes('fetch')
+                    ? 'Network error. Please check your connection and try again.'
+                    : 'Something went wrong while loading the certificate.'}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => window.location.href = '/'}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
+                  >
+                    Go Back
+                  </button>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-sm transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -93,17 +114,27 @@ export default function VerifyPage() {
               </h3>
               <div className="space-y-4">
                 <div className="bg-dark-lighter rounded-xl p-4">
-                  <p className="text-sm text-gray-400 mb-2">Document Hash</p>
-                  <p className="font-mono text-sm text-white break-all">{metadata.hash}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-400 mb-2">Document Hash</p>
+                      <p className="font-mono text-sm text-white break-all">{metadata.hash}</p>
+                    </div>
+                    <CopyButton text={metadata.hash} label="Copy" />
+                  </div>
                 </div>
                 <div className="bg-dark-lighter rounded-xl p-4">
-                  <p className="text-sm text-gray-400 mb-2">Merkle Root Hash</p>
-                  <p className="font-mono text-sm text-white break-all">{metadata.rootHash}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-400 mb-2">Merkle Root Hash</p>
+                      <p className="font-mono text-sm text-white break-all">{metadata.rootHash}</p>
+                    </div>
+                    <CopyButton text={metadata.rootHash} label="Copy" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <CertificateVerifier metadata={metadata} />
+            <CertificateVerifierWrapper metadata={metadata} />
           </div>
         )}
       </div>
