@@ -28,7 +28,7 @@ export default function ThemeSwitch() {
             d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
           />
         </svg>
-        
+
         {/* Moon icon */}
         <svg
           className={`absolute inset-0 w-6 h-6 text-blue-400 transition-all duration-300 ${
@@ -46,7 +46,7 @@ export default function ThemeSwitch() {
           />
         </svg>
       </div>
-      
+
       {/* Tooltip */}
       <span className="absolute bottom-full right-0 mb-2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
         {theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

@@ -31,16 +31,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Update document class and localStorage when theme changes
   useEffect(() => {
     if (!mounted) return
-    
+
     const root = document.documentElement
-    
+
     // Add transition class for smooth theme switching
     root.classList.add('theme-transition')
-    
+
     root.classList.remove('light', 'dark')
     root.classList.add(theme)
     localStorage.setItem('theme', theme)
-    
+
     // Remove transition class after animation completes
     setTimeout(() => {
       root.classList.remove('theme-transition')
@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme, mounted])
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
 
   // Prevent flash of incorrect theme
@@ -56,11 +56,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return null
   }
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {

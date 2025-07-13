@@ -44,12 +44,10 @@ export default function VerifyPage() {
             Verify your NFT-backed certificate on the Klever Blockchain
           </p>
         </div>
-        
+
         <div className="glass-card p-6 sm:p-8 mb-8 animate-fade-in animation-delay-200">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center">
-            <span className="text-gradient">
-              NFT Details
-            </span>
+            <span className="text-gradient">NFT Details</span>
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
@@ -75,21 +73,33 @@ export default function VerifyPage() {
         {error && (
           <div className="glass-card border-red-500/20 bg-red-500/10 p-6 mb-8 animate-scale-in">
             <div className="flex items-start">
-              <svg className="w-6 h-6 text-red-400 mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-6 h-6 text-red-400 mr-3 flex-shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-red-400 mb-2">Unable to Load Certificate</h3>
+                <h3 className="text-lg font-semibold text-red-400 mb-2">
+                  Unable to Load Certificate
+                </h3>
                 <p className="text-gray-300 mb-4">
-                  {error.includes('404') || error.includes('not found') 
+                  {error.includes('404') || error.includes('not found')
                     ? 'This certificate ID was not found. Please check the ID and try again.'
                     : error.includes('network') || error.includes('fetch')
-                    ? 'Network error. Please check your connection and try again.'
-                    : 'Something went wrong while loading the certificate.'}
+                      ? 'Network error. Please check your connection and try again.'
+                      : 'Something went wrong while loading the certificate.'}
                 </p>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => window.location.href = '/'}
+                    onClick={() => (window.location.href = '/')}
                     className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
                   >
                     Go Back
@@ -117,7 +127,9 @@ export default function VerifyPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Document Hash</p>
-                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">{metadata.hash}</p>
+                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">
+                        {metadata.hash}
+                      </p>
                     </div>
                     <CopyButton text={metadata.hash} label="Copy" />
                   </div>
@@ -125,8 +137,12 @@ export default function VerifyPage() {
                 <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Merkle Root Hash</p>
-                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">{metadata.rootHash}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Merkle Root Hash
+                      </p>
+                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">
+                        {metadata.rootHash}
+                      </p>
                     </div>
                     <CopyButton text={metadata.rootHash} label="Copy" />
                   </div>

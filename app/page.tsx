@@ -27,11 +27,14 @@ export default function Home() {
           <div className="mb-8">
             <h1 className="text-5xl sm:text-6xl font-bold mb-4">
               <span className="text-gradient">Klever</span>
-              <span className="block text-3xl sm:text-4xl mt-2 text-gray-900 dark:text-white">Certificate Verification</span>
+              <span className="block text-3xl sm:text-4xl mt-2 text-gray-900 dark:text-white">
+                Certificate Verification
+              </span>
             </h1>
           </div>
           <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Instantly verify the authenticity of your educational certificates secured on the Klever Blockchain
+            Instantly verify the authenticity of your educational certificates secured on the Klever
+            Blockchain
           </p>
         </div>
 
@@ -39,14 +42,21 @@ export default function Home() {
         <div className="max-w-2xl mx-auto mb-16">
           <div className="glass-card p-8 neon-glow animate-slide-up">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Verify Your Certificate</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Verify Your Certificate
+              </h2>
               <button
                 onClick={() => setShowHelp(!showHelp)}
                 className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
                 aria-label="Toggle help"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </button>
             </div>
@@ -66,7 +76,10 @@ export default function Home() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="certificate-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  htmlFor="certificate-id"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Enter Certificate ID
                 </label>
                 <div className="relative">
@@ -74,7 +87,7 @@ export default function Home() {
                     id="certificate-id"
                     type="text"
                     value={certificateId}
-                    onChange={(e) => setCertificateId(e.target.value)}
+                    onChange={e => setCertificateId(e.target.value)}
                     placeholder="TICKER/NONCE"
                     className="input-modern pr-20"
                   />
@@ -90,14 +103,19 @@ export default function Home() {
                   Example: KCERT-V2YJ/1
                 </p>
               </div>
-              
+
               <button
                 type="submit"
                 disabled={!certificateId.includes('/')}
                 className="btn-primary w-full text-lg flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 Verify Certificate
               </button>
@@ -109,11 +127,23 @@ export default function Home() {
         <div className="grid md:grid-cols-3 gap-8 mb-16 animate-fade-in animation-delay-200">
           <div className="glass-card p-6 text-center">
             <div className="w-16 h-16 bg-primary-100 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              <svg
+                className="w-8 h-8 text-primary"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Enter Certificate ID</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Enter Certificate ID
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Find the unique NFT ID on your certificate or in your email
             </p>
@@ -121,8 +151,18 @@ export default function Home() {
 
           <div className="glass-card p-6 text-center">
             <div className="w-16 h-16 bg-secondary-100 dark:bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              <svg
+                className="w-8 h-8 text-secondary"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Upload PDF</h3>
@@ -133,11 +173,23 @@ export default function Home() {
 
           <div className="glass-card p-6 text-center">
             <div className="w-16 h-16 bg-accent-100 dark:bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+                className="w-8 h-8 text-accent"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Get Verified</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Get Verified
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Blockchain verification ensures your certificate is genuine
             </p>

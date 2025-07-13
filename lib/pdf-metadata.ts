@@ -34,31 +34,31 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
       console.warn('PDF.js not available (server-side rendering)')
       return {}
     }
-    
+
     const arrayBuffer = await file.arrayBuffer()
     const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise
-    
+
     const metadata = await pdf.getMetadata()
-    
+
     // Extract custom metadata
     const customMetadata: PDFMetadata = {}
-    
+
     if (metadata.info && typeof metadata.info === 'object') {
       // Check for custom fields in the info object
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const info = metadata.info as any
-      
+
       // Map PDF metadata keys to our field names
       // We only need mapping when PDF uses different key names than our standard fields
       const fieldMapping: { [key: string]: string } = {
-        'course_name': 'course',
-        'instructor_name': 'instructor',
-        'issue_date': 'date',
-        'certificate_date': 'date',
-        'verification_salt': 'salt',
-        'hash_salt': 'salt'
+        course_name: 'course',
+        instructor_name: 'instructor',
+        issue_date: 'date',
+        certificate_date: 'date',
+        verification_salt: 'salt',
+        hash_salt: 'salt',
       }
-      
+
       // Extract fields from info object - check all properties
       for (const key in info) {
         const value = info[key]
@@ -70,12 +70,12 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
               customMetadata.name = parts[1].trim()
             }
           }
-          
+
           // Special handling for Subject field as course
           if (key === 'Subject') {
             customMetadata.course = value
           }
-          
+
           // Special handling for Keywords field - might contain salt
           if (key === 'Keywords' && value.includes('salt:')) {
             const saltMatch = value.match(/salt:\s*([a-fA-F0-9]+)/)
@@ -83,36 +83,52 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
               customMetadata.salt = saltMatch[1]
             }
           }
-          
+
           // Check if this key matches our field mapping
           const normalizedKey = key.toLowerCase().replace(/[- ]/g, '_')
-          
+
           // Check if it's a mapped field
           if (fieldMapping[normalizedKey]) {
             customMetadata[fieldMapping[normalizedKey]] = value
           } else if (fieldMapping[key]) {
             customMetadata[fieldMapping[key]] = value
-          } 
+          }
           // Check if it's a standard field name that we want to extract
-          else if (['name', 'course', 'instructor', 'instructor_title', 'date', 'location', 'salt', 'issuer', 'course_load'].includes(normalizedKey)) {
+          else if (
+            [
+              'name',
+              'course',
+              'instructor',
+              'instructor_title',
+              'date',
+              'location',
+              'salt',
+              'issuer',
+              'course_load',
+            ].includes(normalizedKey)
+          ) {
             customMetadata[normalizedKey] = value
           }
           // Store other metadata that might be relevant
-          else if (['name', 'course', 'instructor', 'date', 'salt'].some(field => normalizedKey.includes(field))) {
+          else if (
+            ['name', 'course', 'instructor', 'date', 'salt'].some(field =>
+              normalizedKey.includes(field)
+            )
+          ) {
             customMetadata[normalizedKey] = value
           }
-          
+
           // Also check if the key itself is exactly 'salt' (case-insensitive)
           if (key.toLowerCase() === 'salt') {
             customMetadata.salt = value
           }
         }
       }
-      
+
       // Check for custom properties
       if (info.Custom) {
         const custom = info.Custom
-        
+
         // Parse CertificateData if present
         if (custom.CertificateData) {
           const certData = String(custom.CertificateData)
@@ -126,7 +142,7 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
             }
           }
         }
-        
+
         // Also process other custom fields
         for (const [key, value] of Object.entries(custom)) {
           if (key !== 'CertificateData' && value) {
@@ -134,7 +150,7 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
             if (!customMetadata[normalizedKey]) {
               customMetadata[normalizedKey] = String(value)
             }
-            
+
             // Special check for salt field
             if (key.toLowerCase() === 'salt' || normalizedKey === 'salt') {
               customMetadata.salt = String(value)
@@ -143,14 +159,14 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
         }
       }
     }
-    
+
     // Check metadata object for additional fields
     if (metadata.metadata) {
       try {
         // The metadata might be in different formats depending on the PDF
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadataObj = metadata.metadata as any
-        
+
         // Try to access metadata in various ways
         if (metadataObj._metadata && typeof metadataObj._metadata.entries === 'function') {
           for (const [key, value] of metadataObj._metadata.entries()) {
@@ -183,15 +199,18 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
         console.log('Could not extract additional metadata:', e)
       }
     }
-    
+
     // Debug logging
     console.log('PDF Metadata Extraction Debug:', {
       infoKeys: metadata.info ? Object.keys(metadata.info) : [],
-      customKeys: metadata.info && (metadata.info as any).Custom ? Object.keys((metadata.info as any).Custom) : [],
+      customKeys:
+        metadata.info && (metadata.info as Record<string, unknown>).Custom
+          ? Object.keys((metadata.info as Record<string, unknown>).Custom as Record<string, unknown>)
+          : [],
       extractedMetadata: customMetadata,
-      hasSalt: !!customMetadata.salt
+      hasSalt: !!customMetadata.salt,
     })
-    
+
     return customMetadata
   } catch (error) {
     console.error('Error extracting PDF metadata:', error)

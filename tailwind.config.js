@@ -75,8 +75,8 @@ module.exports = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'gradient': 'gradient 8s ease infinite',
-        'float': 'float 6s ease-in-out infinite',
+        gradient: 'gradient 8s ease infinite',
+        float: 'float 6s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'fade-in': 'fade-in 0.5s ease-in-out',
         'slide-up': 'slide-up 0.5s ease-out',
@@ -86,33 +86,33 @@ module.exports = {
         gradient: {
           '0%, 100%': {
             'background-size': '200% 200%',
-            'background-position': 'left center'
+            'background-position': 'left center',
           },
           '50%': {
             'background-size': '200% 200%',
-            'background-position': 'right center'
-          }
+            'background-position': 'right center',
+          },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-20px)' }
+          '50%': { transform: 'translateY(-20px)' },
         },
         'pulse-glow': {
           '0%, 100%': { opacity: 1 },
-          '50%': { opacity: 0.8 }
+          '50%': { opacity: 0.8 },
         },
         'fade-in': {
           '0%': { opacity: 0 },
-          '100%': { opacity: 1 }
+          '100%': { opacity: 1 },
         },
         'slide-up': {
           '0%': { transform: 'translateY(20px)', opacity: 0 },
-          '100%': { transform: 'translateY(0)', opacity: 1 }
+          '100%': { transform: 'translateY(0)', opacity: 1 },
         },
         'scale-in': {
           '0%': { transform: 'scale(0.9)', opacity: 0 },
-          '100%': { transform: 'scale(1)', opacity: 1 }
-        }
+          '100%': { transform: 'scale(1)', opacity: 1 },
+        },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

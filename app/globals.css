@@ -6,21 +6,26 @@
   html {
     @apply scroll-smooth;
   }
-  
+
   body {
     @apply bg-gray-50 text-gray-900 dark:bg-dark dark:text-gray-100;
   }
-  
+
   /* Smooth theme transition */
   .theme-transition * {
     @apply !transition-colors !duration-300;
   }
-  
+
   /* Better text readability */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply text-gray-900 dark:text-white;
   }
-  
+
   p {
     @apply text-gray-700 dark:text-gray-300;
   }
@@ -30,28 +35,29 @@
   .gradient-bg {
     @apply bg-gradient-to-br from-primary via-secondary to-accent animate-gradient;
   }
-  
+
   .glass-card {
     @apply backdrop-blur-lg bg-white/70 dark:bg-white/10 
            border border-gray-200 dark:border-white/20 
            rounded-2xl shadow-lg dark:shadow-none
            transition-all duration-300;
   }
-  
+
   .neon-glow {
     @apply shadow-xl;
   }
-  
+
   .dark .neon-glow {
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3),
-                0 0 40px rgba(147, 51, 234, 0.2),
-                0 0 60px rgba(147, 51, 234, 0.1);
+    box-shadow:
+      0 0 20px rgba(147, 51, 234, 0.3),
+      0 0 40px rgba(147, 51, 234, 0.2),
+      0 0 60px rgba(147, 51, 234, 0.1);
   }
-  
+
   .text-gradient {
     @apply bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent;
   }
-  
+
   .btn-primary {
     @apply px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white font-semibold rounded-xl 
            hover:shadow-lg hover:scale-105 transform transition-all duration-300
@@ -59,7 +65,7 @@
            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
            dark:focus:ring-offset-dark;
   }
-  
+
   .input-modern {
     @apply w-full px-6 py-4 
            bg-white dark:bg-dark-lighter 
@@ -77,11 +83,11 @@
   .animation-delay-200 {
     animation-delay: 200ms;
   }
-  
+
   .animation-delay-2000 {
     animation-delay: 2s;
   }
-  
+
   .animation-delay-4000 {
     animation-delay: 4s;
   }
