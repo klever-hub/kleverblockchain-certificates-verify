@@ -8,6 +8,8 @@ import CertificateStatus from './CertificateStatus'
 
 interface CertificateVerifierProps {
   metadata: NFTMetadata
+  salt?: string
+  onSaltChange?: (salt: string) => void
 }
 
 interface FieldVerification {
@@ -18,7 +20,7 @@ interface FieldVerification {
   }
 }
 
-export default function CertificateVerifier({ metadata }: CertificateVerifierProps) {
+export default function CertificateVerifier({ metadata, salt: initialSalt = '', onSaltChange }: CertificateVerifierProps) {
   const [file, setFile] = useState<File | null>(null)
   const [pdfVerificationResult, setPdfVerificationResult] = useState<{
     isValid: boolean | null
@@ -27,6 +29,17 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
   const [isDragging, setIsDragging] = useState(false)
   const [autoFilledFields, setAutoFilledFields] = useState<string[]>([])
   const [isVerifyingAll, setIsVerifyingAll] = useState(false)
+  const [salt, setSalt] = useState(initialSalt)
+  const [saltFromPdf, setSaltFromPdf] = useState<string | null>(null)
+  const [verificationEnabled, setVerificationEnabled] = useState(!!initialSalt)
+  const [displaySalt, setDisplaySalt] = useState(initialSalt ? formatSaltForDisplay(initialSalt) : '')
+  
+  // Format salt for display with dashes every 4 characters
+  function formatSaltForDisplay(value: string) {
+    const cleaned = value.replace(/-/g, '')
+    const chunks = cleaned.match(/.{1,4}/g) || []
+    return chunks.join('-')
+  }
   
   // Dynamically get available fields from metadata.proofs
   const availableFields = metadata.proofs 
@@ -73,11 +86,26 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
           console.log('Available fields from proofs:', availableFields)
         }
         
+        // Check for salt in PDF metadata
+        if (pdfMetadata.salt) {
+          // Clean the salt by removing dashes
+          const cleanedSalt = pdfMetadata.salt.replace(/-/g, '')
+          setSaltFromPdf(cleanedSalt)
+          // Only auto-apply salt if no salt is currently set
+          if (!salt) {
+            setSalt(cleanedSalt)
+            setDisplaySalt(formatSaltForDisplay(cleanedSalt))
+            onSaltChange?.(cleanedSalt)
+            setVerificationEnabled(true)  // Enable verification when salt is loaded from PDF
+          }
+        }
+        
         // Always log for debugging
         console.log('Auto-fill debug:', {
           availableFields,
           pdfMetadataKeys: Object.keys(pdfMetadata),
-          filledCount: filled.length
+          filledCount: filled.length,
+          securityCode: pdfMetadata.salt
         })
       }
     } catch (error) {
@@ -233,7 +261,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
       })
       
       if (proof.length > 0) {
-        const isValid = verifyMerkleProof(leaf, proof, metadata.rootHash)
+        const isValid = verifyMerkleProof(leaf, proof, metadata.rootHash, salt)
         
         setFieldVerifications(prev => ({
           ...prev,
@@ -378,6 +406,97 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
         </div>
       )}
 
+      {/* Salt Configuration */}
+      {metadata.rootHash && (
+        <div className="glass-card p-6 sm:p-8 animate-slide-up animation-delay-100">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-600 text-white font-bold">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Security Code
+            </h3>
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 mb-4">
+            Enter the security code provided with your certificate for enhanced verification.
+          </p>
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={displaySalt}
+              onChange={(e) => {
+                const inputValue = e.target.value
+                // Allow only alphanumeric and dashes
+                if (!/^[a-zA-Z0-9-]*$/.test(inputValue)) return
+                
+                // Remove dashes and update both display and actual salt
+                const cleanedValue = inputValue.replace(/-/g, '')
+                setSalt(cleanedValue)
+                setDisplaySalt(formatSaltForDisplay(cleanedValue))
+                onSaltChange?.(cleanedValue)
+                if (cleanedValue) {
+                  setVerificationEnabled(true)
+                }
+              }}
+              placeholder="Enter security code (optional)"
+              className="w-full px-4 py-2 bg-white dark:bg-dark border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary/50 transition-all font-mono"
+            />
+            {saltFromPdf && salt !== saltFromPdf && (
+              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    PDF contains security code: <code className="font-mono text-xs bg-blue-100 dark:bg-blue-500/20 px-1 py-0.5 rounded">{formatSaltForDisplay(saltFromPdf)}</code>
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    // saltFromPdf is already cleaned
+                    setSalt(saltFromPdf)
+                    setDisplaySalt(formatSaltForDisplay(saltFromPdf))
+                    onSaltChange?.(saltFromPdf)
+                    setVerificationEnabled(true)
+                  }}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                >
+                  Use PDF code
+                </button>
+              </div>
+            )}
+            {!salt && !verificationEnabled && (
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-500/10 rounded-lg border border-yellow-200 dark:border-yellow-500/30">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium mb-2">
+                      No security code provided
+                    </p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-3">
+                      Verification without a security code may not match the expected results. Click below if you want to proceed anyway.
+                    </p>
+                    <button
+                      onClick={() => setVerificationEnabled(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Enable Verification Without Security Code
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Step 2: Certificate Fields Verification */}
       {metadata.rootHash && availableFields.length > 0 && (
         <div className="glass-card p-6 sm:p-8 animate-slide-up animation-delay-200">
@@ -399,16 +518,27 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
           
           {/* Quick Actions */}
           <div className="mb-6 p-4 bg-primary-50 dark:bg-primary/10 rounded-xl border border-primary-200 dark:border-transparent">
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-              <strong className="text-gray-900 dark:text-white">Tip:</strong> You can find these details on your PDF certificate
-            </p>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
-              Fields marked with ✓ have been successfully verified
-            </div>
-            {autoFilledFields.length > 0 && (
-              <div className="mt-2 text-xs text-accent-600 dark:text-accent animate-pulse">
-                ✨ Auto-filled {autoFilledFields.length} field{autoFilledFields.length > 1 ? 's' : ''} from PDF metadata
+            {!verificationEnabled && !salt ? (
+              <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-300">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0h-2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <strong>Verification locked:</strong> Please provide a security code or enable verification without code above
               </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                  <strong className="text-gray-900 dark:text-white">Tip:</strong> You can find these details on your PDF certificate
+                </p>
+                <div className="text-xs text-gray-600 dark:text-gray-400">
+                  Fields marked with ✓ have been successfully verified
+                </div>
+                {autoFilledFields.length > 0 && (
+                  <div className="mt-2 text-xs text-accent-600 dark:text-accent animate-pulse">
+                    ✨ Auto-filled {autoFilledFields.length} field{autoFilledFields.length > 1 ? 's' : ''} from PDF metadata
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -443,7 +573,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
                   </div>
                   <button
                     onClick={() => verifyField(field)}
-                    disabled={!fieldVerifications[field].value || fieldVerifications[field].isVerifying || fieldVerifications[field].isValid === true || isVerifyingAll}
+                    disabled={!verificationEnabled || !fieldVerifications[field].value || fieldVerifications[field].isVerifying || fieldVerifications[field].isValid === true || isVerifyingAll}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                       fieldVerifications[field].isValid === true
                         ? 'bg-accent-100 dark:bg-accent/20 text-accent-700 dark:text-accent cursor-default'
@@ -481,7 +611,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
                 {availableFields.some(field => fieldVerifications[field].value && fieldVerifications[field].isValid !== true) && (
                   <button
                     onClick={verifyAllFields}
-                    disabled={isVerifyingAll}
+                    disabled={!verificationEnabled || isVerifyingAll}
                     className="px-6 py-2 bg-primary-100 dark:bg-primary/20 text-primary-700 dark:text-primary hover:bg-primary-200 dark:hover:bg-primary/30 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isVerifyingAll ? (

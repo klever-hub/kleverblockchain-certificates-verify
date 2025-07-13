@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import { NFTMetadata } from '@/lib/klever-api'
+import { useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 // Dynamically import CertificateVerifier to avoid SSR issues with PDF.js
 const CertificateVerifier = dynamic(
@@ -24,5 +26,29 @@ interface CertificateVerifierWrapperProps {
 }
 
 export default function CertificateVerifierWrapper({ metadata }: CertificateVerifierWrapperProps) {
-  return <CertificateVerifier metadata={metadata} />
+  const searchParams = useSearchParams()
+  const [salt, setSalt] = useState('')
+  
+  useEffect(() => {
+    // Get salt from URL params and clean it by removing dashes
+    const urlSalt = searchParams.get('salt')
+    if (urlSalt) {
+      const cleanedSalt = urlSalt.replace(/-/g, '')
+      setSalt(cleanedSalt)
+    }
+  }, [searchParams])
+  
+  const handleSaltChange = (newSalt: string) => {
+    setSalt(newSalt)
+    // Update URL without navigation
+    const newParams = new URLSearchParams(searchParams.toString())
+    if (newSalt) {
+      newParams.set('salt', newSalt)
+    } else {
+      newParams.delete('salt')
+    }
+    window.history.replaceState(null, '', `?${newParams.toString()}`)
+  }
+  
+  return <CertificateVerifier metadata={metadata} salt={salt} onSaltChange={handleSaltChange} />
 }

@@ -31,9 +31,15 @@ export interface ProofItem {
   position: 'left' | 'right'
 }
 
-function hashLeaf(data: string): string {
+function hashLeaf(data: string, salt?: string): string {
+  // Add salt if provided
+  let leafData = data
+  if (salt) {
+    leafData = `${salt}:${data}`
+  }
+  
   // Double SHA256 to match Python implementation
-  const firstHash = CryptoJS.SHA256(data)
+  const firstHash = CryptoJS.SHA256(leafData)
   return CryptoJS.SHA256(firstHash).toString()
 }
 
@@ -55,13 +61,15 @@ function hashPair(left: string, right: string): string {
 export function verifyMerkleProof(
   leaf: string,
   proof: ProofItem[],
-  rootHash: string
+  rootHash: string,
+  salt?: string
 ): boolean {
-  // Calculate leaf hash using double SHA256
-  let currentHash = hashLeaf(leaf)
+  // Calculate leaf hash using double SHA256 with optional salt
+  let currentHash = hashLeaf(leaf, salt)
   
   console.log('Merkle verification steps:', {
     leaf,
+    securityCode: salt,
     leafHash: currentHash,
     proof
   })

@@ -22,6 +22,7 @@ export interface PDFMetadata {
   instructor?: string
   instructor_title?: string
   issuer?: string
+  salt?: string
   [key: string]: string | undefined
 }
 
@@ -48,17 +49,14 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
       const info = metadata.info as any
       
       // Map PDF metadata keys to our field names
+      // We only need mapping when PDF uses different key names than our standard fields
       const fieldMapping: { [key: string]: string } = {
-        'name': 'name',
-        'student_name': 'name',
-        'course': 'course',
         'course_name': 'course',
-        'instructor': 'instructor',
         'instructor_name': 'instructor',
-        'instructor_title': 'instructor_title',
-        'date': 'date',
         'issue_date': 'date',
-        'certificate_date': 'date'
+        'certificate_date': 'date',
+        'verification_salt': 'salt',
+        'hash_salt': 'salt'
       }
       
       // Extract fields from info object - check all properties
@@ -78,17 +76,35 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
             customMetadata.course = value
           }
           
+          // Special handling for Keywords field - might contain salt
+          if (key === 'Keywords' && value.includes('salt:')) {
+            const saltMatch = value.match(/salt:\s*([a-fA-F0-9]+)/)
+            if (saltMatch) {
+              customMetadata.salt = saltMatch[1]
+            }
+          }
+          
           // Check if this key matches our field mapping
           const normalizedKey = key.toLowerCase().replace(/[- ]/g, '_')
+          
+          // Check if it's a mapped field
           if (fieldMapping[normalizedKey]) {
             customMetadata[fieldMapping[normalizedKey]] = value
           } else if (fieldMapping[key]) {
             customMetadata[fieldMapping[key]] = value
-          } else {
-            // Store as-is if it looks like a relevant field
-            if (['name', 'course', 'instructor', 'date'].some(field => normalizedKey.includes(field))) {
-              customMetadata[normalizedKey] = value
-            }
+          } 
+          // Check if it's a standard field name that we want to extract
+          else if (['name', 'course', 'instructor', 'instructor_title', 'date', 'location', 'salt', 'issuer', 'course_load'].includes(normalizedKey)) {
+            customMetadata[normalizedKey] = value
+          }
+          // Store other metadata that might be relevant
+          else if (['name', 'course', 'instructor', 'date', 'salt'].some(field => normalizedKey.includes(field))) {
+            customMetadata[normalizedKey] = value
+          }
+          
+          // Also check if the key itself is exactly 'salt' (case-insensitive)
+          if (key.toLowerCase() === 'salt') {
+            customMetadata.salt = value
           }
         }
       }
@@ -118,6 +134,11 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
             if (!customMetadata[normalizedKey]) {
               customMetadata[normalizedKey] = String(value)
             }
+            
+            // Special check for salt field
+            if (key.toLowerCase() === 'salt' || normalizedKey === 'salt') {
+              customMetadata.salt = String(value)
+            }
           }
         }
       }
@@ -137,6 +158,10 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
             if (!customMetadata[normalizedKey] && value) {
               customMetadata[normalizedKey] = String(value)
             }
+            // Special check for salt
+            if ((key.toLowerCase() === 'salt' || normalizedKey === 'salt') && value) {
+              customMetadata.salt = String(value)
+            }
           }
         } else if (metadataObj.getAll) {
           // Try the getAll method if available
@@ -147,6 +172,10 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
               if (!customMetadata[normalizedKey] && allMetadata[key]) {
                 customMetadata[normalizedKey] = String(allMetadata[key])
               }
+              // Special check for salt
+              if ((key.toLowerCase() === 'salt' || normalizedKey === 'salt') && allMetadata[key]) {
+                customMetadata.salt = String(allMetadata[key])
+              }
             }
           }
         }
@@ -155,7 +184,14 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
       }
     }
     
-    console.log('Extracted PDF metadata:', customMetadata)
+    // Debug logging
+    console.log('PDF Metadata Extraction Debug:', {
+      infoKeys: metadata.info ? Object.keys(metadata.info) : [],
+      customKeys: metadata.info && (metadata.info as any).Custom ? Object.keys((metadata.info as any).Custom) : [],
+      extractedMetadata: customMetadata,
+      hasSalt: !!customMetadata.salt
+    })
+    
     return customMetadata
   } catch (error) {
     console.error('Error extracting PDF metadata:', error)
