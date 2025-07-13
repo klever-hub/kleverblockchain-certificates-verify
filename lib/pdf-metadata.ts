@@ -205,7 +205,9 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
       infoKeys: metadata.info ? Object.keys(metadata.info) : [],
       customKeys:
         metadata.info && (metadata.info as Record<string, unknown>).Custom
-          ? Object.keys((metadata.info as Record<string, unknown>).Custom as Record<string, unknown>)
+          ? Object.keys(
+              (metadata.info as Record<string, unknown>).Custom as Record<string, unknown>
+            )
           : [],
       extractedMetadata: customMetadata,
       hasSalt: !!customMetadata.salt,

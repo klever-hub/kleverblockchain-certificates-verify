@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_KLEVER_API_URL: ${{ vars.NEXT_PUBLIC_KLEVER_API_URL || 'https://api.testnet.klever.org' }}
+
+      # Deploy to Vercel (optional - set SKIP_VERCEL_DEPLOY=true as a repository variable to skip)
+      - name: Deploy to Vercel
+        if: ${{ vars.SKIP_VERCEL_DEPLOY != 'true' }}
+        continue-on-error: true
+        run: |
+          npm install -g vercel
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
