@@ -1,4 +1,6 @@
 // Dynamic import to avoid SSR issues
+// Use loose typing for pdfjs-dist due to complex type requirements
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let pdfjsLib: any = null
 
 // Initialize PDF.js only on client side
@@ -42,6 +44,7 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
     
     if (metadata.info && typeof metadata.info === 'object') {
       // Check for custom fields in the info object
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const info = metadata.info as any
       
       // Map PDF metadata keys to our field names
@@ -124,6 +127,7 @@ export async function extractPDFMetadata(file: File): Promise<PDFMetadata> {
     if (metadata.metadata) {
       try {
         // The metadata might be in different formats depending on the PDF
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadataObj = metadata.metadata as any
         
         // Try to access metadata in various ways

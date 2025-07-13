@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { fetchNFTMetadata, NFTMetadata } from '@/lib/klever-api'
 import CertificateVerifierWrapper from '@/components/CertificateVerifierWrapper'
 import CopyButton from '@/components/CopyButton'
@@ -14,13 +14,7 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (ticker && nonce) {
-      loadNFTMetadata()
-    }
-  }, [ticker, nonce])
-
-  const loadNFTMetadata = async () => {
+  const loadNFTMetadata = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -31,7 +25,13 @@ export default function VerifyPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [ticker, nonce])
+
+  useEffect(() => {
+    if (ticker && nonce) {
+      loadNFTMetadata()
+    }
+  }, [ticker, nonce, loadNFTMetadata])
 
   return (
     <main className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">

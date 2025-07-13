@@ -133,7 +133,7 @@ export default function CertificateStatus({
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-gray-400">
                 <span>Verification Progress</span>
-                <span>{Math.round((fieldsVerified / (totalFields + 1)) * 100)}%</span>
+                <span>{Math.round(((fieldsVerified + (pdfValid ? 1 : 0)) / (totalFields + 1)) * 100)}%</span>
               </div>
               <div className="w-full bg-dark-lighter rounded-full h-2 overflow-hidden">
                 <div 
@@ -142,7 +142,7 @@ export default function CertificateStatus({
                     status === 'partially-verified' ? 'bg-blue-400' : 
                     'bg-yellow-400'
                   }`}
-                  style={{ width: `${((fieldsVerified + 1) / (totalFields + 1)) * 100}%` }}
+                  style={{ width: `${((fieldsVerified + (pdfValid ? 1 : 0)) / (totalFields + 1)) * 100}%` }}
                 />
               </div>
             </div>

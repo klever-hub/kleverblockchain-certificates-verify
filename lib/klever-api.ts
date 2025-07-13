@@ -13,14 +13,14 @@ export interface NFTMetadata {
   proofs?: {
     [key: string]: MerkleProofItem[]
   }
-  [key: string]: any
+  [key: string]: string | MerkleProofItem[] | { [key: string]: MerkleProofItem[] } | undefined
 }
 
 export interface NFTResponse {
   data: {
     asset: {
       metadata: string  // JSON string containing the NFT metadata
-      [key: string]: any
+      [key: string]: string | number | boolean | null | undefined
     }
   }
   error: string

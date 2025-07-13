@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { hashPDF, verifyMerkleProof } from '@/lib/crypto-utils'
 import { NFTMetadata } from '@/lib/klever-api'
 import CryptoJS from 'crypto-js'
@@ -124,14 +124,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
     }
   }
 
-  // Auto-verify PDF on file upload
-  useEffect(() => {
-    if (file) {
-      verifyPDF()
-    }
-  }, [file])
-
-  const verifyPDF = async () => {
+  const verifyPDF = useCallback(async () => {
     if (!file) return
 
     try {
@@ -165,6 +158,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
             verificationMessage = `PDF verification failed. The calculated hash (${pdfHash.substring(0, 16)}...) does not match the expected hash (${expectedHash.substring(0, 16)}...).`
           }
         } catch (error) {
+          console.error('Error extracting PDF metadata:', error)
           verificationMessage = `PDF verification failed. The calculated hash (${pdfHash.substring(0, 16)}...) does not match the expected hash (${expectedHash.substring(0, 16)}...).`
         }
       }
@@ -179,7 +173,14 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
         message: `Error verifying PDF: ${error}`
       })
     }
-  }
+  }, [file, metadata.hash, metadata.ticker, metadata.nonce])
+
+  // Auto-verify PDF on file upload
+  useEffect(() => {
+    if (file) {
+      verifyPDF()
+    }
+  }, [file, verifyPDF])
 
   const handleFieldChange = (field: string, value: string) => {
     setFieldVerifications(prev => ({
@@ -463,7 +464,7 @@ export default function CertificateVerifier({ metadata }: CertificateVerifierPro
                 </div>
                 {fieldVerifications[field].isValid === false && (
                   <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                    This value doesn't match the certificate record. Please check and try again.
+                    This value doesn&apos;t match the certificate record. Please check and try again.
                   </p>
                 )}
               </div>
