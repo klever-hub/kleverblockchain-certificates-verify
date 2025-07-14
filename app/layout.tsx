@@ -9,6 +9,16 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Klever Certificate Verification',
   description: 'Verify certificates issued on Klever Blockchain',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/favicon.svg',
+  },
+  manifest: '/manifest.json',
+  themeColor: '#9333EA',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,0 +1,17 @@
+{
+  "name": "Klever Certificate Verification",
+  "short_name": "Klever Verify",
+  "description": "Verify certificates issued on Klever Blockchain",
+  "theme_color": "#9333EA",
+  "background_color": "#0F172A",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
