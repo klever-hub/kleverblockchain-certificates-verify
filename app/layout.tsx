@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -10,14 +10,14 @@ export const metadata: Metadata = {
   title: 'Klever Certificate Verification',
   description: 'Verify certificates issued on Klever Blockchain',
   icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
+    icon: [{ url: '/favicon.ico' }, { url: '/favicon.svg', type: 'image/svg+xml' }],
     shortcut: '/favicon.ico',
     apple: '/favicon.svg',
   },
   manifest: '/manifest.json',
+}
+
+export const viewport: Viewport = {
   themeColor: '#9333EA',
 }
 

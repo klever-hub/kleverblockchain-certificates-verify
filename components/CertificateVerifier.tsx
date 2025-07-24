@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { hashPDF, verifyMerkleProof } from '@/lib/crypto-utils'
 import { NFTMetadata } from '@/lib/klever-api'
+import IssuerVerificationBadge from './IssuerVerificationBadge'
 import CryptoJS from 'crypto-js'
 import CertificateStatus from './CertificateStatus'
 
@@ -192,7 +193,7 @@ export default function CertificateVerifier({
           const { extractPDFMetadata } = await import('@/lib/pdf-metadata')
           const pdfMetadata = await extractPDFMetadata(file)
 
-          if (pdfMetadata.nft_id === `${metadata.ticker}/${metadata.nonce}`) {
+          if (pdfMetadata.nft_id === metadata.nft_id) {
             verificationMessage = `PDF hash mismatch detected, but the document contains valid metadata for NFT ${pdfMetadata.nft_id}. The hash calculation method may differ.`
             console.log('PDF has valid NFT metadata despite hash mismatch')
           } else {
@@ -214,7 +215,7 @@ export default function CertificateVerifier({
         message: `Error verifying PDF: ${error}`,
       })
     }
-  }, [file, metadata.hash, metadata.ticker, metadata.nonce])
+  }, [file, metadata.hash, metadata.nft_id])
 
   // Auto-verify PDF on file upload
   useEffect(() => {
@@ -328,6 +329,16 @@ export default function CertificateVerifier({
         totalFields={totalFieldsCount}
         nftId={metadata.nft_id}
       />
+
+      {/* Issuer Verification */}
+      {metadata.issuerVerification && (
+        <div className="animate-slide-up animation-delay-50">
+          <IssuerVerificationBadge
+            verification={metadata.issuerVerification}
+            issuerAddress={metadata.issuerAddress}
+          />
+        </div>
+      )}
 
       {/* Step 1: Upload PDF (Optional) */}
       <div className="glass-card p-6 sm:p-8 animate-slide-up">

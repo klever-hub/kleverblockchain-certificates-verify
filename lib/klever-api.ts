@@ -6,6 +6,8 @@ export interface MerkleProofItem {
   position: 'left' | 'right'
 }
 
+import { IssuerRegistry, IssuerVerificationResult } from './issuer-registry'
+
 export interface NFTMetadata {
   hash: string
   rootHash: string
@@ -14,13 +16,23 @@ export interface NFTMetadata {
   proofs?: {
     [key: string]: MerkleProofItem[]
   }
-  [key: string]: string | MerkleProofItem[] | { [key: string]: MerkleProofItem[] } | undefined
+  issuerAddress?: string
+  issuerVerification?: IssuerVerificationResult
+  [key: string]:
+    | string
+    | MerkleProofItem[]
+    | { [key: string]: MerkleProofItem[] }
+    | IssuerVerificationResult
+    | undefined
 }
 
 export interface NFTResponse {
   data: {
     asset: {
       metadata: string // JSON string containing the NFT metadata
+      issuer?: string // NFT issuer/creator address
+      creator?: string // NFT creator address
+      ownerAddress?: string // Current owner address
       [key: string]: string | number | boolean | null | undefined
     }
   }
@@ -125,6 +137,26 @@ export async function fetchNFTMetadata(ticker: string, nonce: string): Promise<N
     // Parse the metadata JSON string
     const metadata = JSON.parse(data.data.asset.metadata) as NFTMetadata
 
+    // Extract issuer address from the response
+    // The issuer field might be named differently in the actual API
+    const issuerAddress =
+      data.data.asset.issuer || data.data.asset.creator || data.data.asset.ownerAddress
+
+    // Add issuer information to metadata
+    metadata.issuerAddress = issuerAddress
+
+    // Verify issuer if address is available
+    if (issuerAddress) {
+      metadata.issuerVerification = IssuerRegistry.verifyIssuer(issuerAddress)
+    } else {
+      // No issuer address available
+      metadata.issuerVerification = {
+        isVerified: false,
+        verificationLevel: 'unverified',
+        message: 'Issuer address not available in NFT data',
+      }
+    }
+
     return metadata
   } catch (error) {
     console.error('Failed to fetch NFT metadata:', error)
@@ -134,5 +166,68 @@ export async function fetchNFTMetadata(ticker: string, nonce: string): Promise<N
 
 // Function to get mock data for testing
 export function getMockMetadata(): NFTMetadata {
-  return mockMetadata
+  const mockWithIssuer = {
+    ...mockMetadata,
+    issuerAddress: 'klv1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpgm89z',
+  }
+  mockWithIssuer.issuerVerification = IssuerRegistry.verifyIssuer(mockWithIssuer.issuerAddress)
+  return mockWithIssuer
+}
+
+// Helper method to get verification status summary
+export function getVerificationSummary(metadata: NFTMetadata): {
+  status: 'verified' | 'warning' | 'unverified'
+  title: string
+  description: string
+  icon: string
+} {
+  if (!metadata.issuerVerification) {
+    return {
+      status: 'unverified',
+      title: 'Issuer Unknown',
+      description: 'Unable to verify certificate issuer',
+      icon: '❓',
+    }
+  }
+
+  const { verificationLevel, issuerInfo, message } = metadata.issuerVerification
+
+  switch (verificationLevel) {
+    case 'gold':
+      return {
+        status: 'verified',
+        title: `Issued by ${issuerInfo?.name || 'Verified Institution'}`,
+        description: message,
+        icon: '🏆',
+      }
+    case 'silver':
+      return {
+        status: 'verified',
+        title: `Issued by ${issuerInfo?.name || 'Verified Organization'}`,
+        description: message,
+        icon: '🥈',
+      }
+    case 'bronze':
+      return {
+        status: 'warning',
+        title: `Issued by ${issuerInfo?.name || 'Registered Issuer'}`,
+        description: `${message} - Verification pending`,
+        icon: '🥉',
+      }
+    default:
+      return {
+        status: 'unverified',
+        title: 'Unverified Issuer',
+        description: 'Certificate issued by unknown entity',
+        icon: '⚠️',
+      }
+  }
+}
+
+// Check if certificate should be trusted
+export function isTrustedCertificate(metadata: NFTMetadata): boolean {
+  if (!metadata.issuerVerification) return false
+
+  const { verificationLevel } = metadata.issuerVerification
+  return verificationLevel === 'gold' || verificationLevel === 'silver'
 }

@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { fetchNFTMetadata, NFTMetadata } from '@/lib/klever-api'
 import CertificateVerifierWrapper from '@/components/CertificateVerifierWrapper'
 import CopyButton from '@/components/CopyButton'
+import IssuerVerificationBadge from '@/components/IssuerVerificationBadge'
 
 export default function VerifyPage() {
   const params = useParams()
@@ -46,9 +47,18 @@ export default function VerifyPage() {
         </div>
 
         <div className="glass-card p-6 sm:p-8 mb-8 animate-fade-in animation-delay-200">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center">
-            <span className="text-gradient">NFT Details</span>
-          </h2>
+          <div className="flex items-start justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+              <span className="text-gradient">NFT Details</span>
+            </h2>
+            {metadata && metadata.issuerVerification && (
+              <IssuerVerificationBadge
+                verification={metadata.issuerVerification}
+                issuerAddress={metadata.issuerAddress}
+                compact
+              />
+            )}
+          </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Collection Ticker</p>
