@@ -96,14 +96,16 @@ export default function CertificateStatus({
           {fieldsVerified}/{totalFields} fields
         </div>
       </div>
-      
+
       {/* Progress bar */}
       <div className="h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 ease-out ${
-            status === 'invalid' ? 'bg-red-500' :
-            status === 'fully-verified' ? 'bg-green-500' :
-            'bg-gradient-to-r from-blue-500 to-emerald-500'
+            status === 'invalid'
+              ? 'bg-red-500'
+              : status === 'fully-verified'
+                ? 'bg-green-500'
+                : 'bg-gradient-to-r from-blue-500 to-emerald-500'
           }`}
           style={{ width: `${config.progress}%` }}
         />

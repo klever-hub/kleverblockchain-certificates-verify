@@ -44,12 +44,24 @@ export default function VerifyPage() {
               Certificate Verification
             </h1>
             <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 border border-primary/20 rounded-xl shadow-sm">
-              <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              <svg
+                className="w-5 h-5 text-primary"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                />
               </svg>
               <div className="text-left">
                 <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">NFT ID</p>
-                <p className="font-mono text-lg font-bold text-primary">{ticker}/{nonce}</p>
+                <p className="font-mono text-lg font-bold text-primary">
+                  {ticker}/{nonce}
+                </p>
               </div>
               <CopyButton text={`${ticker}/${nonce}`} label="Copy" />
             </div>
@@ -120,15 +132,25 @@ export default function VerifyPage() {
                 issuerAddress={metadata.issuerAddress}
               />
             </div>
-            
+
             <CertificateVerifierWrapper metadata={metadata} />
-            
+
             {/* Technical Details - Collapsible */}
             <div className="max-w-4xl mx-auto">
               <details className="group">
                 <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors flex items-center gap-2">
-                  <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-4 h-4 transition-transform group-open:rotate-90"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                   View Technical Details
                 </summary>
@@ -140,7 +162,9 @@ export default function VerifyPage() {
                     <div className="bg-gray-50 dark:bg-dark-lighter rounded-lg p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Document Hash</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            Document Hash
+                          </p>
                           <p className="font-mono text-xs text-gray-900 dark:text-white break-all">
                             {metadata.hash}
                           </p>
