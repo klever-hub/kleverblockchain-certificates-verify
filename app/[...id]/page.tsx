@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { fetchNFTMetadata, NFTMetadata } from '@/lib/klever-api'
 import CertificateVerifierWrapper from '@/components/CertificateVerifierWrapper'
 import CopyButton from '@/components/CopyButton'
-import IssuerVerificationBadge from '@/components/IssuerVerificationBadge'
+import InstitutionSection from '@/components/InstitutionSection'
 
 export default function VerifyPage() {
   const params = useParams()
@@ -37,36 +37,21 @@ export default function VerifyPage() {
   return (
     <main className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-12 text-center animate-slide-up">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-            <span className="text-gradient">Certificate Verification</span>
-          </h1>
-          <p className="text-lg text-gray-300">
-            Verify your NFT-backed certificate on the Klever Blockchain
-          </p>
-        </div>
-
-        <div className="glass-card p-6 sm:p-8 mb-8 animate-fade-in animation-delay-200">
-          <div className="flex items-start justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-              <span className="text-gradient">NFT Details</span>
-            </h2>
-            {metadata && metadata.issuerVerification && (
-              <IssuerVerificationBadge
-                verification={metadata.issuerVerification}
-                issuerAddress={metadata.issuerAddress}
-                compact
-              />
-            )}
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Collection Ticker</p>
-              <p className="text-xl font-mono text-gray-900 dark:text-white">{ticker || '—'}</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">NFT Nonce</p>
-              <p className="text-xl font-mono text-gray-900 dark:text-white">{nonce || '—'}</p>
+        {/* Header */}
+        <div className="mb-8 animate-fade-in">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Certificate Verification
+            </h1>
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 border border-primary/20 rounded-xl shadow-sm">
+              <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <div className="text-left">
+                <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">NFT ID</p>
+                <p className="font-mono text-lg font-bold text-primary">{ticker}/{nonce}</p>
+              </div>
+              <CopyButton text={`${ticker}/${nonce}`} label="Copy" />
             </div>
           </div>
         </div>
@@ -127,40 +112,59 @@ export default function VerifyPage() {
         )}
 
         {metadata && (
-          <div className="space-y-8 animate-fade-in">
-            <div className="glass-card p-6 sm:p-8 neon-glow">
-              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-                Certificate Metadata
-              </h3>
-              <div className="space-y-4">
-                <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Document Hash</p>
-                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">
-                        {metadata.hash}
-                      </p>
-                    </div>
-                    <CopyButton text={metadata.hash} label="Copy" />
-                  </div>
-                </div>
-                <div className="bg-gray-50 dark:bg-dark-lighter rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Merkle Root Hash
-                      </p>
-                      <p className="font-mono text-sm text-gray-900 dark:text-white break-all">
-                        {metadata.rootHash}
-                      </p>
-                    </div>
-                    <CopyButton text={metadata.rootHash} label="Copy" />
-                  </div>
-                </div>
-              </div>
+          <div className="space-y-6 animate-fade-in">
+            {/* Institution Section - Same width as verifier */}
+            <div className="max-w-4xl mx-auto">
+              <InstitutionSection
+                verification={metadata.issuerVerification}
+                issuerAddress={metadata.issuerAddress}
+              />
             </div>
-
+            
             <CertificateVerifierWrapper metadata={metadata} />
+            
+            {/* Technical Details - Collapsible */}
+            <div className="max-w-4xl mx-auto">
+              <details className="group">
+                <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors flex items-center gap-2">
+                  <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  View Technical Details
+                </summary>
+                <div className="mt-4 glass-card p-6 sm:p-8 animate-fade-in">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                    Certificate Metadata
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="bg-gray-50 dark:bg-dark-lighter rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Document Hash</p>
+                          <p className="font-mono text-xs text-gray-900 dark:text-white break-all">
+                            {metadata.hash}
+                          </p>
+                        </div>
+                        <CopyButton text={metadata.hash} label="Copy" />
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-dark-lighter rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            Merkle Root Hash
+                          </p>
+                          <p className="font-mono text-xs text-gray-900 dark:text-white break-all">
+                            {metadata.rootHash}
+                          </p>
+                        </div>
+                        <CopyButton text={metadata.rootHash} label="Copy" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
           </div>
         )}
       </div>

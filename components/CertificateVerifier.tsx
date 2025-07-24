@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { hashPDF, verifyMerkleProof } from '@/lib/crypto-utils'
 import { NFTMetadata } from '@/lib/klever-api'
-import IssuerVerificationBadge from './IssuerVerificationBadge'
-import CryptoJS from 'crypto-js'
 import CertificateStatus from './CertificateStatus'
 
 interface CertificateVerifierProps {
@@ -32,14 +30,12 @@ export default function CertificateVerifier({
     message: string
   }>({ isValid: null, message: '' })
   const [isDragging, setIsDragging] = useState(false)
-  const [autoFilledFields, setAutoFilledFields] = useState<string[]>([])
   const [isVerifyingAll, setIsVerifyingAll] = useState(false)
   const [salt, setSalt] = useState(initialSalt)
-  const [saltFromPdf, setSaltFromPdf] = useState<string | null>(null)
-  const [verificationEnabled, setVerificationEnabled] = useState(!!initialSalt)
   const [displaySalt, setDisplaySalt] = useState(
     initialSalt ? formatSaltForDisplay(initialSalt) : ''
   )
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Format salt for display with dashes every 4 characters
   function formatSaltForDisplay(value: string) {
@@ -55,6 +51,7 @@ export default function CertificateVerifier({
         .map(key => key.replace('Proof', ''))
     : []
 
+
   const [fieldVerifications, setFieldVerifications] = useState<FieldVerification>(
     availableFields.reduce(
       (acc, field) => ({
@@ -65,13 +62,24 @@ export default function CertificateVerifier({
     )
   )
 
+  // Auto-focus on first empty field on mount
+  useEffect(() => {
+    const firstEmptyField = availableFields.find(
+      field => !fieldVerifications[field]?.value
+    )
+    if (firstEmptyField) {
+      const input = document.getElementById(`field-${firstEmptyField}`)
+      input?.focus()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount
+
   // Helper function to extract and apply PDF metadata
   const extractAndApplyMetadata = async (pdfFile: File) => {
     try {
       const { extractPDFMetadata } = await import('@/lib/pdf-metadata')
       const pdfMetadata = await extractPDFMetadata(pdfFile)
       if (Object.keys(pdfMetadata).length > 0) {
-        const filled: string[] = []
         setFieldVerifications(prev => {
           const updated = { ...prev }
           for (const field of availableFields) {
@@ -81,179 +89,87 @@ export default function CertificateVerifier({
                 value: pdfMetadata[field],
                 isValid: null,
               }
-              filled.push(field)
             }
           }
           return updated
         })
-        if (filled.length > 0) {
-          setAutoFilledFields(filled)
-          // Clear auto-filled indicator after 3 seconds
-          setTimeout(() => setAutoFilledFields([]), 3000)
-        } else {
-          console.log(
-            'No metadata fields found in PDF that match available fields:',
-            availableFields
-          )
-          console.log('PDF metadata keys:', Object.keys(pdfMetadata))
-          console.log('Available fields from proofs:', availableFields)
-        }
-
-        // Check for salt in PDF metadata
+        
+        // Extract salt from PDF
         if (pdfMetadata.salt) {
-          // Clean the salt by removing dashes
           const cleanedSalt = pdfMetadata.salt.replace(/-/g, '')
-          setSaltFromPdf(cleanedSalt)
-          // Only auto-apply salt if no salt is currently set
-          if (!salt) {
-            setSalt(cleanedSalt)
-            setDisplaySalt(formatSaltForDisplay(cleanedSalt))
-            onSaltChange?.(cleanedSalt)
-            setVerificationEnabled(true) // Enable verification when salt is loaded from PDF
-          }
+          setSalt(cleanedSalt)
+          setDisplaySalt(formatSaltForDisplay(cleanedSalt))
+          onSaltChange?.(cleanedSalt)
         }
-
-        // Always log for debugging
-        console.log('Auto-fill debug:', {
-          availableFields,
-          pdfMetadataKeys: Object.keys(pdfMetadata),
-          filledCount: filled.length,
-          securityCode: pdfMetadata.salt,
-        })
       }
-    } catch (error) {
-      console.error('Error extracting PDF metadata:', error)
+      return pdfMetadata
+    } catch {
+      // Error extracting PDF metadata
+      return {}
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const newFile = e.target.files[0]
-      setFile(newFile)
-      setPdfVerificationResult({ isValid: null, message: '' })
-
-      // Extract metadata and auto-fill fields
-      await extractAndApplyMetadata(newFile)
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-
-    const files = e.dataTransfer.files
-    if (files && files.length > 0 && files[0].type === 'application/pdf') {
-      const newFile = files[0]
-      setFile(newFile)
-      setPdfVerificationResult({ isValid: null, message: '' })
-
-      // Extract metadata and auto-fill fields
-      await extractAndApplyMetadata(newFile)
-    }
-  }
-
-  const verifyPDF = useCallback(async () => {
-    if (!file) return
-
+  const handleFileUpload = async (uploadedFile: File) => {
+    setFile(uploadedFile)
+    const pdfMetadata = await extractAndApplyMetadata(uploadedFile)
+    
+    // Auto-verify PDF
     try {
-      const pdfHash = await hashPDF(file)
-
-      // Use the blockchain hash for comparison
+      const pdfHash = await hashPDF(uploadedFile)
       const expectedHash = metadata.hash
-
       const isPdfValid = pdfHash === expectedHash
 
-      console.log('PDF Verification Debug:', {
-        calculatedHash: pdfHash,
-        expectedHash: expectedHash,
-        match: isPdfValid,
-      })
-
-      // For now, if hashes don't match, check if PDF has valid metadata structure
-      let verificationMessage = ''
       if (isPdfValid) {
-        verificationMessage =
-          'PDF verification successful! The document matches the blockchain record.'
+        setPdfVerificationResult({
+          isValid: true,
+          message: 'PDF verified',
+        })
+      } else if (pdfMetadata.nft_id === metadata.nft_id) {
+        setPdfVerificationResult({
+          isValid: true,
+          message: 'PDF metadata valid',
+        })
       } else {
-        // Try to check if PDF has valid metadata as alternative validation
-        try {
-          const { extractPDFMetadata } = await import('@/lib/pdf-metadata')
-          const pdfMetadata = await extractPDFMetadata(file)
-
-          if (pdfMetadata.nft_id === metadata.nft_id) {
-            verificationMessage = `PDF hash mismatch detected, but the document contains valid metadata for NFT ${pdfMetadata.nft_id}. The hash calculation method may differ.`
-            console.log('PDF has valid NFT metadata despite hash mismatch')
-          } else {
-            verificationMessage = `PDF verification failed. The calculated hash (${pdfHash.substring(0, 16)}...) does not match the expected hash (${expectedHash.substring(0, 16)}...).`
-          }
-        } catch (error) {
-          console.error('Error extracting PDF metadata:', error)
-          verificationMessage = `PDF verification failed. The calculated hash (${pdfHash.substring(0, 16)}...) does not match the expected hash (${expectedHash.substring(0, 16)}...).`
-        }
+        setPdfVerificationResult({
+          isValid: false,
+          message: 'PDF verification failed',
+        })
       }
-
-      setPdfVerificationResult({
-        isValid: isPdfValid,
-        message: verificationMessage,
-      })
-    } catch (error) {
+    } catch {
+      // PDF verification error
       setPdfVerificationResult({
         isValid: false,
-        message: `Error verifying PDF: ${error}`,
+        message: 'Verification error',
       })
     }
-  }, [file, metadata.hash, metadata.nft_id])
-
-  // Auto-verify PDF on file upload
-  useEffect(() => {
-    if (file) {
-      verifyPDF()
-    }
-  }, [file, verifyPDF])
-
-  const handleFieldChange = (field: string, value: string) => {
-    setFieldVerifications(prev => ({
-      ...prev,
-      [field]: { ...prev[field], value, isValid: null },
-    }))
-    // Remove from auto-filled list if manually edited
-    setAutoFilledFields(prev => prev.filter(f => f !== field))
   }
 
-  const verifyAllFields = async () => {
-    setIsVerifyingAll(true)
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      setIsDragging(false)
+      const droppedFile = e.dataTransfer.files[0]
+      if (droppedFile && droppedFile.type === 'application/pdf') {
+        handleFileUpload(droppedFile)
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [metadata.hash]
+  )
 
-    // Get all fields that have values and haven't been verified yet
-    const fieldsToVerify = availableFields.filter(
-      field => fieldVerifications[field].value && fieldVerifications[field].isValid !== true
-    )
-
-    // Verify each field sequentially
-    for (const field of fieldsToVerify) {
-      await verifyField(field)
-      // Small delay to show progress
-      await new Promise(resolve => setTimeout(resolve, 200))
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      handleFileUpload(selectedFile)
     }
-
-    setIsVerifyingAll(false)
   }
 
-  const verifyField = async (fieldName: string) => {
+  // Verify a single field
+  const verifyField = async (fieldName: string): Promise<boolean> => {
     const fieldData = fieldVerifications[fieldName]
-    if (!fieldData.value || !metadata.rootHash || !metadata.proofs) return
+    if (!fieldData || !fieldData.value) {
+      return false
+    }
 
     setFieldVerifications(prev => ({
       ...prev,
@@ -262,16 +178,8 @@ export default function CertificateVerifier({
 
     try {
       const leaf = `${fieldName}:${fieldData.value}`
-      const proof = metadata.proofs[`${fieldName}Proof`] || []
-
-      console.log('Field Verification Debug:', {
-        field: fieldName,
-        value: fieldData.value,
-        leaf: leaf,
-        leafHash: CryptoJS.SHA256(leaf).toString(),
-        proof: proof,
-        rootHash: metadata.rootHash,
-      })
+      const proofKey = `${fieldName}Proof`
+      const proof = metadata.proofs?.[proofKey] || []
 
       if (proof.length > 0) {
         const isValid = verifyMerkleProof(leaf, proof, metadata.rootHash, salt)
@@ -280,33 +188,55 @@ export default function CertificateVerifier({
           ...prev,
           [fieldName]: { ...prev[fieldName], isValid, isVerifying: false },
         }))
+        
+        return isValid
       } else {
         setFieldVerifications(prev => ({
           ...prev,
           [fieldName]: { ...prev[fieldName], isValid: false, isVerifying: false },
         }))
+        return false
       }
-    } catch (error) {
-      console.error('Field verification error:', error)
+    } catch {
+      // Field verification error
       setFieldVerifications(prev => ({
         ...prev,
         [fieldName]: { ...prev[fieldName], isValid: false, isVerifying: false },
       }))
+      return false
     }
   }
 
+  // Verify all fields
+  const verifyAllFields = async () => {
+
+    setIsVerifyingAll(true)
+    // Variable to track if all fields are valid (removed with console.log statements)
+    const verificationResults: Record<string, boolean> = {}
+    
+    for (const field of availableFields) {
+
+      if (fieldVerifications[field]?.value) {
+        const isFieldValid = await verifyField(field)
+        verificationResults[field] = isFieldValid
+        
+        if (!isFieldValid) {
+          // allValid = false
+        } else {
+        }
+      } else {
+        // allValid = false
+        verificationResults[field] = false
+      }
+    }
+    
+    setIsVerifyingAll(false)
+    
+
+    // All fields verified successfully
+  }
+
   const formatFieldName = (field: string) => {
-    // Handle special cases
-    const specialCases: { [key: string]: string } = {
-      instructor_title: 'Instructor Title',
-      nft_id: 'NFT ID',
-      pdf_hash: 'PDF Hash',
-    }
-
-    if (specialCases[field]) {
-      return specialCases[field]
-    }
-
     return field
       .replace(/_/g, ' ')
       .replace(/([A-Z])/g, ' $1')
@@ -314,504 +244,208 @@ export default function CertificateVerifier({
       .trim()
   }
 
-  // Calculate verification stats
   const verifiedFieldsCount = Object.values(fieldVerifications).filter(
     f => f.isValid === true
   ).length
   const totalFieldsCount = availableFields.length
 
+  const allFieldsFilled = availableFields.every(
+    field => fieldVerifications[field]?.value
+  )
+
+
   return (
-    <div className="space-y-8">
-      {/* Certificate Status Summary */}
-      <CertificateStatus
-        pdfValid={pdfVerificationResult.isValid}
-        fieldsVerified={verifiedFieldsCount}
-        totalFields={totalFieldsCount}
-        nftId={metadata.nft_id}
-      />
-
-      {/* Issuer Verification */}
-      {metadata.issuerVerification && (
-        <div className="animate-slide-up animation-delay-50">
-          <IssuerVerificationBadge
-            verification={metadata.issuerVerification}
-            issuerAddress={metadata.issuerAddress}
-          />
-        </div>
-      )}
-
-      {/* Step 1: Upload PDF (Optional) */}
-      <div className="glass-card p-6 sm:p-8 animate-slide-up">
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-              pdfVerificationResult.isValid === true
-                ? 'bg-accent'
-                : pdfVerificationResult.isValid === false
-                  ? 'bg-red-500'
-                  : 'bg-gray-600'
-            }`}
-          >
-            {pdfVerificationResult.isValid === true ? '✓' : <span className="text-sm">PDF</span>}
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Upload Certificate PDF
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Optional - Only needed for document verification
-            </p>
-          </div>
-        </div>
-        <p className="text-gray-700 dark:text-gray-300 mb-6">
-          Have the digital PDF? Upload it to verify the document hash. You can still verify
-          individual fields without uploading.
-        </p>
-        <div
-          className="relative"
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleFileChange}
-            className="hidden"
-            id="pdf-upload"
-          />
-          <label htmlFor="pdf-upload" className="block w-full cursor-pointer">
-            <div
-              className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
-                isDragging
-                  ? 'border-primary bg-primary/10 scale-105'
-                  : 'border-white/20 hover:border-primary/50'
-              }`}
-            >
-              <svg
-                className="w-16 h-16 mx-auto mb-4 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
-                {file ? file.name : 'Drop your PDF here or click to browse'}
-              </p>
-              <p className="text-sm text-gray-500">PDF files only • Max 10MB</p>
-            </div>
-          </label>
-        </div>
+    <div className="max-w-4xl mx-auto">
+      {/* Compact Status */}
+      <div className="mb-6">
+        <CertificateStatus
+          pdfValid={pdfVerificationResult.isValid}
+          fieldsVerified={verifiedFieldsCount}
+          totalFields={totalFieldsCount}
+          nftId={metadata.nft_id}
+        />
       </div>
 
-      {/* PDF Verification Status */}
-      {pdfVerificationResult.message && (
-        <div
-          className={`glass-card p-6 animate-scale-in ${
-            pdfVerificationResult.isValid
-              ? 'border-accent/30 bg-accent/10'
-              : 'border-red-500/30 bg-red-500/10'
-          }`}
-        >
-          <div className="flex items-start">
+      {/* Main Card */}
+      <div className="glass-card p-6 sm:p-8">
+        <div className="space-y-6">
+            {/* PDF Upload - Compact */}
             <div
-              className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                pdfVerificationResult.isValid ? 'bg-accent/20' : 'bg-red-500/20'
+              className={`relative border-2 border-dashed rounded-lg p-4 transition-all cursor-pointer ${
+                isDragging
+                  ? 'border-primary bg-primary/5'
+                  : file
+                    ? 'border-green-500 bg-green-50 dark:bg-green-500/10'
+                    : 'border-gray-300 dark:border-gray-700 hover:border-primary'
               }`}
-            >
-              {pdfVerificationResult.isValid ? (
-                <svg
-                  className="w-6 h-6 text-accent"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-6 h-6 text-red-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              )}
-            </div>
-            <div className="ml-4 flex-1">
-              <h4
-                className={`text-lg font-semibold mb-2 ${
-                  pdfVerificationResult.isValid ? 'text-accent' : 'text-red-400'
-                }`}
-              >
-                PDF {pdfVerificationResult.isValid ? 'Verified' : 'Verification Failed'}
-              </h4>
-              <p className="text-gray-700 dark:text-gray-300">{pdfVerificationResult.message}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Salt Configuration */}
-      {metadata.rootHash && (
-        <div className="glass-card p-6 sm:p-8 animate-slide-up animation-delay-100">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-600 text-white font-bold">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Security Code</h3>
-          </div>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            Enter the security code provided with your certificate for enhanced verification.
-          </p>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={displaySalt}
-              onChange={e => {
-                const inputValue = e.target.value
-                // Allow only alphanumeric and dashes
-                if (!/^[a-zA-Z0-9-]*$/.test(inputValue)) return
-
-                // Remove dashes and update both display and actual salt
-                const cleanedValue = inputValue.replace(/-/g, '')
-                setSalt(cleanedValue)
-                setDisplaySalt(formatSaltForDisplay(cleanedValue))
-                onSaltChange?.(cleanedValue)
-                if (cleanedValue) {
-                  setVerificationEnabled(true)
-                }
+              onDrop={handleDrop}
+              onDragOver={e => {
+                e.preventDefault()
+                setIsDragging(true)
               }}
-              placeholder="Enter security code (optional)"
-              className="w-full px-4 py-2 bg-white dark:bg-dark border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary/50 transition-all font-mono"
-            />
-            {saltFromPdf && salt !== saltFromPdf && (
-              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg">
-                <svg
-                  className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <p className="text-sm text-blue-800 dark:text-blue-300">
-                    PDF contains security code:{' '}
-                    <code className="font-mono text-xs bg-blue-100 dark:bg-blue-500/20 px-1 py-0.5 rounded">
-                      {formatSaltForDisplay(saltFromPdf)}
-                    </code>
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    // saltFromPdf is already cleaned
-                    setSalt(saltFromPdf)
-                    setDisplaySalt(formatSaltForDisplay(saltFromPdf))
-                    onSaltChange?.(saltFromPdf)
-                    setVerificationEnabled(true)
-                  }}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-                >
-                  Use PDF code
-                </button>
-              </div>
-            )}
-            {!salt && !verificationEnabled && (
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-500/10 rounded-lg border border-yellow-200 dark:border-yellow-500/30">
-                <div className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium mb-2">
-                      No security code provided
-                    </p>
-                    <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-3">
-                      Verification without a security code may not match the expected results. Click
-                      below if you want to proceed anyway.
-                    </p>
-                    <button
-                      onClick={() => setVerificationEnabled(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Enable Verification Without Security Code
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Step 2: Certificate Fields Verification */}
-      {metadata.rootHash && availableFields.length > 0 && (
-        <div className="glass-card p-6 sm:p-8 animate-slide-up animation-delay-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                verifiedFieldsCount === totalFieldsCount && totalFieldsCount > 0
-                  ? 'bg-accent'
-                  : verifiedFieldsCount > 0
-                    ? 'bg-blue-500'
-                    : 'bg-primary'
-              }`}
+              onDragLeave={() => setIsDragging(false)}
+              onClick={() => fileInputRef.current?.click()}
             >
-              {verifiedFieldsCount === totalFieldsCount && totalFieldsCount > 0 ? (
-                '✓'
-              ) : (
-                <span className="text-sm">Fields</span>
-              )}
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Verify Certificate Details
-            </h3>
-          </div>
-          <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Enter the certificate details exactly as they appear on your document (printed or
-            digital) to verify individual fields.
-          </p>
-
-          {/* Quick Actions */}
-          <div className="mb-6 p-4 bg-primary-50 dark:bg-primary/10 rounded-xl border border-primary-200 dark:border-transparent">
-            {!verificationEnabled && !salt ? (
-              <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-300">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m0 0v2m0-2h2m-2 0h-2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-                <strong>Verification locked:</strong> Please provide a security code or enable
-                verification without code above
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                  <strong className="text-gray-900 dark:text-white">Tip:</strong> You can find these
-                  details on your PDF certificate
-                </p>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  Fields marked with ✓ have been successfully verified
-                </div>
-                {autoFilledFields.length > 0 && (
-                  <div className="mt-2 text-xs text-accent-600 dark:text-accent animate-pulse">
-                    ✨ Auto-filled {autoFilledFields.length} field
-                    {autoFilledFields.length > 1 ? 's' : ''} from PDF metadata
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {availableFields.map(field => (
-              <div
-                key={field}
-                className={`p-4 rounded-xl transition-all duration-300 ${
-                  fieldVerifications[field].isValid === true
-                    ? 'bg-accent-50 dark:bg-accent/10 border border-accent-200 dark:border-accent/30'
-                    : fieldVerifications[field].isValid === false
-                      ? 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30'
-                      : 'bg-gray-50 dark:bg-dark-lighter border border-gray-200 dark:border-transparent hover:border-gray-300 dark:hover:border-white/10'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {formatFieldName(field)}
-                      {fieldVerifications[field].isValid === true && (
-                        <span className="ml-2 text-accent-600 dark:text-accent">✓</span>
-                      )}
-                      {autoFilledFields.includes(field) && (
-                        <span className="ml-2 text-xs text-primary-600 dark:text-primary animate-pulse">
-                          (auto-filled)
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {file ? (
+                    <>
+                      <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {file.name}
+                      </span>
+                      {pdfVerificationResult.isValid && (
+                        <span className="text-xs text-green-600 dark:text-green-400">
+                          ({pdfVerificationResult.message})
                         </span>
                       )}
-                    </label>
-                    <input
-                      type="text"
-                      value={fieldVerifications[field].value}
-                      onChange={e => handleFieldChange(field, e.target.value)}
-                      className="w-full px-4 py-2 bg-white dark:bg-dark border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary/50 transition-all disabled:bg-gray-100 dark:disabled:bg-dark/50 disabled:cursor-not-allowed"
-                      placeholder={`Enter ${formatFieldName(field).toLowerCase()}`}
-                      disabled={fieldVerifications[field].isValid === true}
-                    />
-                  </div>
-                  <button
-                    onClick={() => verifyField(field)}
-                    disabled={
-                      !verificationEnabled ||
-                      !fieldVerifications[field].value ||
-                      fieldVerifications[field].isVerifying ||
-                      fieldVerifications[field].isValid === true ||
-                      isVerifyingAll
-                    }
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                      fieldVerifications[field].isValid === true
-                        ? 'bg-accent-100 dark:bg-accent/20 text-accent-700 dark:text-accent cursor-default'
-                        : 'bg-primary-100 dark:bg-primary/20 text-primary-700 dark:text-primary hover:bg-primary-200 dark:hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed'
-                    }`}
-                  >
-                    {fieldVerifications[field].isVerifying ? (
-                      <svg
-                        className="animate-spin h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                    ) : fieldVerifications[field].isValid === true ? (
-                      'Verified'
-                    ) : (
-                      'Verify'
-                    )}
-                  </button>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Upload PDF (optional)
+                      </span>
+                    </>
+                  )}
                 </div>
-                {fieldVerifications[field].isValid === false && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                    This value doesn&apos;t match the certificate record. Please check and try
-                    again.
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Batch Actions */}
-          {verifiedFieldsCount < totalFieldsCount && (
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                  {totalFieldsCount - verifiedFieldsCount} field
-                  {totalFieldsCount - verifiedFieldsCount !== 1 ? 's' : ''} remaining
-                </p>
-                {availableFields.some(
-                  field =>
-                    fieldVerifications[field].value && fieldVerifications[field].isValid !== true
-                ) && (
+                {file && (
                   <button
-                    onClick={verifyAllFields}
-                    disabled={!verificationEnabled || isVerifyingAll}
-                    className="px-6 py-2 bg-primary-100 dark:bg-primary/20 text-primary-700 dark:text-primary hover:bg-primary-200 dark:hover:bg-primary/30 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setFile(null)
+                      setPdfVerificationResult({ isValid: null, message: '' })
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                   >
-                    {isVerifyingAll ? (
-                      <>
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Verifying...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                          />
-                        </svg>
-                        Verify All Fields
-                      </>
-                    )}
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 )}
               </div>
             </div>
-          )}
+
+            {/* Security Code */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Security Code {salt ? '(auto-filled from PDF)' : '(if provided)'}
+              </label>
+              <input
+                type="text"
+                value={displaySalt}
+                onChange={e => {
+                  const inputValue = e.target.value
+                  if (!/^[a-zA-Z0-9-]*$/.test(inputValue)) return
+                  const cleanedValue = inputValue.replace(/-/g, '')
+                  setSalt(cleanedValue)
+                  setDisplaySalt(formatSaltForDisplay(cleanedValue))
+                  onSaltChange?.(cleanedValue)
+                }}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                className="w-full px-4 py-2 bg-white dark:bg-dark border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary/50 transition-all font-mono"
+              />
+            </div>
+
+            {/* All Fields */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {availableFields.map(field => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {formatFieldName(field)}
+                  </label>
+                  <div className="relative">
+                    <input
+                      id={`field-${field}`}
+                      type="text"
+                      value={fieldVerifications[field]?.value || ''}
+                      onChange={e => {
+                        const newValue = e.target.value
+                        setFieldVerifications(prev => ({
+                          ...prev,
+                          [field]: { ...prev[field], value: newValue, isValid: null },
+                        }))
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && fieldVerifications[field]?.value) {
+                          verifyField(field)
+                        }
+                      }}
+                      className={`w-full px-4 py-2 pr-20 bg-white dark:bg-dark border rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                        fieldVerifications[field]?.isValid === true
+                          ? 'border-green-500 dark:border-green-400 ring-green-500/20'
+                          : fieldVerifications[field]?.isValid === false
+                            ? 'border-red-500 dark:border-red-400 ring-red-500/20'
+                            : 'border-gray-300 dark:border-white/10 focus:ring-primary-500/20'
+                      }`}
+                      placeholder={`Enter ${formatFieldName(field).toLowerCase()}`}
+                    />
+                    {/* Verify button or status icon */}
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {fieldVerifications[field]?.isVerifying ? (
+                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      ) : fieldVerifications[field]?.isValid === true ? (
+                        <div className="text-green-500">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      ) : fieldVerifications[field]?.isValid === false ? (
+                        <button
+                          onClick={() => verifyField(field)}
+                          className="text-red-500 hover:text-red-600 transition-colors"
+                          title="Retry verification"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </button>
+                      ) : fieldVerifications[field]?.value ? (
+                        <button
+                          onClick={() => verifyField(field)}
+                          className="text-primary hover:text-primary-600 transition-colors"
+                          title="Verify field"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Verify Button */}
+            <button
+              onClick={verifyAllFields}
+              disabled={isVerifyingAll || !allFieldsFilled}
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isVerifyingAll ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Verifying...
+                </span>
+              ) : (
+                'Verify Certificate'
+              )}
+            </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }

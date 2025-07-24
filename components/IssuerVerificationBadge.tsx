@@ -47,9 +47,9 @@ export default function IssuerVerificationBadge({
       badge: 'Gold Verified',
     },
     silver: {
-      color: 'text-gray-700 dark:text-gray-300',
-      bgColor: 'bg-gray-100 dark:bg-gray-300/20',
-      borderColor: 'border-gray-300 dark:border-gray-300/30',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-50 dark:bg-blue-400/20',
+      borderColor: 'border-blue-300 dark:border-blue-400/30',
       icon: '🥈',
       badge: 'Silver Verified',
     },
