@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter()
   const [certificateId, setCertificateId] = useState('')
   const [showHelp, setShowHelp] = useState(false)
-  
+
   // Use different example based on network
   const isMainnet = process.env.NEXT_PUBLIC_KLEVER_API_URL?.includes('mainnet') ?? false
   const exampleNFT = isMainnet ? 'KAC-FI8R/1' : 'KCERT-V2YJ/1'

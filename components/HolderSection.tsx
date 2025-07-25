@@ -22,8 +22,18 @@ export default function HolderSection({ holderAddress }: HolderSectionProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
             </svg>
           </div>
           <div>
@@ -37,7 +47,7 @@ export default function HolderSection({ holderAddress }: HolderSectionProps) {
         </div>
         <CopyButton text={holderAddress} label="Copy" />
       </div>
-      
+
       <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
         <p>This address currently owns this certificate NFT on the Klever blockchain.</p>
       </div>

@@ -16,7 +16,7 @@ export default function ChangeNFTModal({ isOpen, onClose, currentNFT }: ChangeNF
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!nftId.includes('/')) {
       setError('Invalid format. NFT ID must be in format: TICKER/NONCE')
       return
@@ -31,7 +31,7 @@ export default function ChangeNFTModal({ isOpen, onClose, currentNFT }: ChangeNF
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
@@ -41,15 +41,18 @@ export default function ChangeNFTModal({ isOpen, onClose, currentNFT }: ChangeNF
         <div className="relative w-full max-w-md bg-white dark:bg-dark rounded-xl shadow-xl animate-scale-in">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Change NFT ID
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Change NFT ID</h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -57,8 +60,8 @@ export default function ChangeNFTModal({ isOpen, onClose, currentNFT }: ChangeNF
           {/* Content */}
           <form onSubmit={handleSubmit} className="p-6">
             <div className="mb-4">
-              <label 
-                htmlFor="nft-id" 
+              <label
+                htmlFor="nft-id"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Enter NFT ID
@@ -67,7 +70,7 @@ export default function ChangeNFTModal({ isOpen, onClose, currentNFT }: ChangeNF
                 id="nft-id"
                 type="text"
                 value={nftId}
-                onChange={(e) => {
+                onChange={e => {
                   setNftId(e.target.value)
                   setError('')
                 }}
@@ -75,9 +78,7 @@ export default function ChangeNFTModal({ isOpen, onClose, currentNFT }: ChangeNF
                 className="w-full px-4 py-2 bg-white dark:bg-dark-lighter border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 autoFocus
               />
-              {error && (
-                <p className="mt-2 text-sm text-red-500">{error}</p>
-              )}
+              {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 Format: COLLECTION/NUMBER (e.g., KCERT-V2YJ/1)
               </p>

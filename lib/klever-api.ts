@@ -193,19 +193,19 @@ export async function fetchNFTMetadata(ticker: string, nonce: string): Promise<N
 export async function fetchNFTHolder(ticker: string, nonce: string): Promise<string | null> {
   try {
     const response = await fetch(`${KLEVER_API_BASE_URL}/assets/nft/holder/${ticker}/${nonce}`)
-    
+
     if (!response.ok) {
       console.error(`Failed to fetch NFT holder: ${response.status} ${response.statusText}`)
       return null
     }
-    
+
     const data: NFTHolderResponse = await response.json()
-    
+
     if (data.code !== 'successful' || !data.data?.account?.address) {
       console.error('Invalid NFT holder response:', data.error)
       return null
     }
-    
+
     return data.data.account.address
   } catch (error) {
     console.error('Failed to fetch NFT holder:', error)
