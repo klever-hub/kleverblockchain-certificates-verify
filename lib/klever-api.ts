@@ -18,6 +18,7 @@ export interface NFTMetadata {
   }
   issuerAddress?: string
   issuerVerification?: IssuerVerificationResult
+  holderAddress?: string
   [key: string]:
     | string
     | MerkleProofItem[]
@@ -34,6 +35,24 @@ export interface NFTResponse {
       creator?: string // NFT creator address
       ownerAddress?: string // Current owner address
       [key: string]: string | number | boolean | null | undefined
+    }
+  }
+  error: string
+  code: string
+}
+
+export interface NFTHolderResponse {
+  data: {
+    account: {
+      address: string
+      assetId: string
+      collection: string
+      nftNonce: number
+      assetName: string
+      assetType: number
+      balance: number
+      metadata: string
+      [key: string]: string | number | boolean | null | undefined | Record<string, unknown>
     }
   }
   error: string
@@ -157,10 +176,40 @@ export async function fetchNFTMetadata(ticker: string, nonce: string): Promise<N
       }
     }
 
+    // Fetch holder information
+    const holderAddress = await fetchNFTHolder(ticker, nonce)
+    if (holderAddress) {
+      metadata.holderAddress = holderAddress
+    }
+
     return metadata
   } catch (error) {
     console.error('Failed to fetch NFT metadata:', error)
     throw error
+  }
+}
+
+// Function to fetch NFT holder information
+export async function fetchNFTHolder(ticker: string, nonce: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${KLEVER_API_BASE_URL}/assets/nft/holder/${ticker}/${nonce}`)
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch NFT holder: ${response.status} ${response.statusText}`)
+      return null
+    }
+    
+    const data: NFTHolderResponse = await response.json()
+    
+    if (data.code !== 'successful' || !data.data?.account?.address) {
+      console.error('Invalid NFT holder response:', data.error)
+      return null
+    }
+    
+    return data.data.account.address
+  } catch (error) {
+    console.error('Failed to fetch NFT holder:', error)
+    return null
   }
 }
 

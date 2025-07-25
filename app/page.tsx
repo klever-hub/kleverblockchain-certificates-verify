@@ -7,6 +7,10 @@ export default function Home() {
   const router = useRouter()
   const [certificateId, setCertificateId] = useState('')
   const [showHelp, setShowHelp] = useState(false)
+  
+  // Use different example based on network
+  const isMainnet = process.env.NEXT_PUBLIC_KLEVER_API_URL?.includes('mainnet') ?? false
+  const exampleNFT = isMainnet ? 'KAC-FI8R/1' : 'KCERT-V2YJ/1'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -16,7 +20,7 @@ export default function Home() {
   }
 
   const handleDemo = () => {
-    setCertificateId('KCERT-V2YJ/1')
+    setCertificateId(exampleNFT)
   }
 
   return (
@@ -69,7 +73,7 @@ export default function Home() {
                 <ul className="list-disc list-inside space-y-1">
                   <li>Check your certificate email for the NFT ID</li>
                   <li>Look for a QR code on your PDF certificate</li>
-                  <li>Format: COLLECTION/NUMBER (e.g., KCERT-V2YJ/1)</li>
+                  <li>Format: COLLECTION/NUMBER (e.g., {exampleNFT})</li>
                 </ul>
               </div>
             )}
@@ -100,7 +104,7 @@ export default function Home() {
                   </button>
                 </div>
                 <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                  Example: KCERT-V2YJ/1
+                  Example: {exampleNFT}
                 </p>
               </div>
 

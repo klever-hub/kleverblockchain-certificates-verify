@@ -6,6 +6,8 @@ import { fetchNFTMetadata, NFTMetadata } from '@/lib/klever-api'
 import CertificateVerifierWrapper from '@/components/CertificateVerifierWrapper'
 import CopyButton from '@/components/CopyButton'
 import InstitutionSection from '@/components/InstitutionSection'
+import ChangeNFTModal from '@/components/ChangeNFTModal'
+import HolderSection from '@/components/HolderSection'
 
 export default function VerifyPage() {
   const params = useParams()
@@ -14,6 +16,7 @@ export default function VerifyPage() {
   const [metadata, setMetadata] = useState<NFTMetadata | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showChangeModal, setShowChangeModal] = useState(false)
 
   const loadNFTMetadata = useCallback(async () => {
     try {
@@ -37,6 +40,28 @@ export default function VerifyPage() {
   return (
     <main className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
+        {/* Top Navigation */}
+        <div className="flex justify-between items-center mb-8">
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
+          </button>
+          <button
+            onClick={() => setShowChangeModal(true)}
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            Change NFT
+          </button>
+        </div>
+
         {/* Header */}
         <div className="mb-8 animate-fade-in">
           <div className="text-center mb-8">
@@ -112,10 +137,16 @@ export default function VerifyPage() {
                     Go Back
                   </button>
                   <button
+                    onClick={() => setShowChangeModal(true)}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors"
+                  >
+                    Try Different NFT
+                  </button>
+                  <button
                     onClick={() => window.location.reload()}
                     className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-sm transition-colors"
                   >
-                    Try Again
+                    Retry
                   </button>
                 </div>
               </div>
@@ -134,6 +165,13 @@ export default function VerifyPage() {
             </div>
 
             <CertificateVerifierWrapper metadata={metadata} />
+
+            {/* Holder Section */}
+            {metadata.holderAddress && (
+              <div className="max-w-4xl mx-auto">
+                <HolderSection holderAddress={metadata.holderAddress} />
+              </div>
+            )}
 
             {/* Technical Details - Collapsible */}
             <div className="max-w-4xl mx-auto">
@@ -192,6 +230,13 @@ export default function VerifyPage() {
           </div>
         )}
       </div>
+
+      {/* Change NFT Modal */}
+      <ChangeNFTModal
+        isOpen={showChangeModal}
+        onClose={() => setShowChangeModal(false)}
+        currentNFT={`${ticker}/${nonce}`}
+      />
     </main>
   )
 }
